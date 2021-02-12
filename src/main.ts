@@ -1,20 +1,32 @@
 import { CanvasModule } from '@nymphajs/dom-api';
-import { setupKeyboard } from './input';
+import { setupKeyboard, setupSecondKeyboard } from './input';
+import { Player } from './player';
 import { Tetris } from './tetris';
 
-function main(canvas: HTMLCanvasElement) {
+function setupKeyboardFor(player: Player, isSecond: boolean) {
+  if (!isSecond) {
+    return setupKeyboard(player);
+  }
+
+  return setupSecondKeyboard(player);
+}
+
+function main(canvas: HTMLCanvasElement, isSecond: boolean) {
   canvas.width = 240;
   canvas.height = 400;
 
   const tetris = new Tetris(canvas);
-  const input = setupKeyboard(tetris.player);
+  const input = setupKeyboardFor(tetris.player, isSecond);
   input.listenTo(window);
 
-  tetris.player.updateScore();
   tetris.start();
 }
 
 const canvasModule = new CanvasModule();
-const { canvas } = canvasModule.init('canvas-container');
+const players = document.querySelectorAll('.player');
+[...players].forEach((player, i) => {
+  const canvasContainer = player.querySelector('.canvas-container')!;
+  const { canvas } = canvasModule.init(canvasContainer);
 
-main(canvas);
+  main(canvas, i === 1);
+});

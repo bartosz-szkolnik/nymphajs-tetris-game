@@ -3,9 +3,12 @@ import { Tetris } from './tetris';
 import { createPiece } from './tetris-pieces';
 import type { Piece } from './tetris-pieces';
 
+export const DROP_SLOW = 1;
+export const DROP_FAST = 0.05;
+
 export class Player {
   private dropCounter = 0;
-  private readonly dropInterval = 1;
+  dropInterval = DROP_SLOW;
 
   pos = new Vec2(0, 0);
   matrix = new Matrix<number>();
@@ -44,10 +47,8 @@ export class Player {
       this.pos.y--;
       this.tetris.arena.merge(this);
       this.reset();
-      this.tetris.arena.sweep((score) => {
-        this.score += score;
-      });
-      this.updateScore();
+      this.score += this.tetris.arena.sweep();
+      this.tetris.updateScore(this.score);
     }
 
     this.dropCounter = 0;
@@ -74,11 +75,7 @@ export class Player {
     if (this.tetris.arena.collide(this)) {
       this.tetris.arena.clear();
       this.score = 0;
-      this.updateScore();
+      this.tetris.updateScore(0);
     }
-  }
-
-  updateScore() {
-    document.getElementById('score')!.innerText = String(this.score);
   }
 }

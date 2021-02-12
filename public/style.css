@@ -6,7 +6,15 @@ body {
   text-align: center;
 }
 
-#screen {
+.container {
+  display: flex;
+}
+
+.player {
+  flex: 1 1 auto;
+}
+
+.canvas-container canvas {
   border: solid 0.2em #fff;
   height: 90vh;
 }

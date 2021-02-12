@@ -9,7 +9,9 @@ export class Tetris {
   readonly arena = new Arena();
   readonly player = new Player(this);
 
-  constructor(private canvas: HTMLCanvasElement) {}
+  constructor(private canvas: HTMLCanvasElement) {
+    this.updateScore(0);
+  }
 
   draw() {
     this.ctx.fillStyle = '#000';
@@ -46,5 +48,11 @@ export class Tetris {
     const timer = new Timer(1 / 60);
     timer.setUpdateFn(update);
     timer.start();
+  }
+
+  updateScore(score: number) {
+    const container = this.canvas.parentElement?.parentElement!;
+    const scoreCont = container!.querySelector('.score')! as HTMLSpanElement;
+    scoreCont.innerText = String(score);
   }
 }
