@@ -4,9 +4,6 @@ body {
   font-family: 'Open Sans', sans-serif;
   font-size: 2em;
   text-align: center;
-}
-
-.container {
   display: flex;
 }
 
@@ -14,7 +11,11 @@ body {
   flex: 1 1 auto;
 }
 
+.player.local .canvas-container canvas {
+  border-color: #fff;
+}
+
 .canvas-container canvas {
-  border: solid 0.2em #fff;
+  border: solid 0.2em #707070;
   height: 90vh;
 }

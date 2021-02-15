@@ -1,14 +1,23 @@
-import { Matrix, Vec2 } from '@nymphajs/core';
+import { EventEmitter, Matrix, Vec2 } from '@nymphajs/core';
 import { Tetris } from './tetris';
 import { createPiece } from './tetris-pieces';
 import type { Piece } from './tetris-pieces';
+import {
+  CHANGE_POSITION,
+  MATRIX_ROTATED,
+  PlayerEvent,
+  UPDATE_SCORE,
+} from './events';
+import { Serializable } from '@nymphajs/network';
+import { SerializedPlayer } from '../shared-types';
 
 export const DROP_SLOW = 1;
 export const DROP_FAST = 0.05;
 
-export class Player {
+export class Player implements Serializable<SerializedPlayer> {
   private dropCounter = 0;
   dropInterval = DROP_SLOW;
+  readonly events = new EventEmitter<PlayerEvent>();
 
   pos = new Vec2(0, 0);
   matrix = new Matrix<number>();
@@ -18,11 +27,27 @@ export class Player {
     this.reset();
   }
 
+  serialize(): SerializedPlayer {
+    return {
+      pos: this.pos.serialize(),
+      matrix: this.matrix.grid,
+      score: this.score,
+    };
+  }
+
+  deserialize(data: SerializedPlayer) {
+    this.pos = new Vec2(data.pos.x, data.pos.y);
+    this.matrix.grid = data.matrix;
+    this.score = data.score;
+  }
+
   move(dir: number) {
     this.pos.x += dir;
     if (this.tetris.arena.collide(this)) {
       this.pos.x -= dir;
+      return;
     }
+    this.events.emit(CHANGE_POSITION, this.pos);
   }
 
   rotate(dir: number) {
@@ -39,19 +64,24 @@ export class Player {
         return;
       }
     }
+
+    this.events.emit(MATRIX_ROTATED, this.matrix.grid);
   }
 
   drop() {
     this.pos.y++;
+    this.dropCounter = 0;
+
     if (this.tetris.arena.collide(this)) {
       this.pos.y--;
       this.tetris.arena.merge(this);
       this.reset();
       this.score += this.tetris.arena.sweep();
-      this.tetris.updateScore(this.score);
+      this.events.emit(UPDATE_SCORE, this.score);
+      return;
     }
 
-    this.dropCounter = 0;
+    this.events.emit(CHANGE_POSITION, this.pos);
   }
 
   update(deltaTime: number) {
@@ -75,7 +105,10 @@ export class Player {
     if (this.tetris.arena.collide(this)) {
       this.tetris.arena.clear();
       this.score = 0;
-      this.tetris.updateScore(0);
+      this.events.emit(UPDATE_SCORE, this.score);
     }
+
+    this.events.emit(CHANGE_POSITION, this.pos);
+    this.events.emit(MATRIX_ROTATED, this.matrix.grid);
   }
 }

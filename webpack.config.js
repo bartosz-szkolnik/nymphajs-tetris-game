@@ -6,7 +6,7 @@ const webpack = require('webpack');
 const config = {};
 
 config.entry = {
-  app: './src/main.ts',
+  app: './src/client/main.ts',
 };
 
 config.output = {

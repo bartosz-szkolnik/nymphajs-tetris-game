@@ -1,16 +1,41 @@
 import { Matrix, Timer, Vec2 } from '@nymphajs/core';
+import { Serializable } from '@nymphajs/network';
+import { SerializedTetris } from '../shared-types';
 import { Arena } from './arena';
+import { UPDATE_SCORE } from './events';
 import { Player } from './player';
 import { COLORS } from './tetris-pieces';
 
-export class Tetris {
+export class Tetris implements Serializable<SerializedTetris> {
   private readonly ctx = this.canvas.getContext('2d')!;
 
   readonly arena = new Arena();
   readonly player = new Player(this);
 
-  constructor(private canvas: HTMLCanvasElement) {
+  constructor(
+    public element: HTMLDivElement,
+    private canvas: HTMLCanvasElement
+  ) {
     this.updateScore(0);
+
+    this.player.events.listen<number>(UPDATE_SCORE, (score) => {
+      this.updateScore(score);
+    });
+  }
+
+  serialize(): SerializedTetris {
+    return {
+      arena: this.arena.serialize(),
+      player: this.player.serialize(),
+    };
+  }
+
+  deserialize(data: SerializedTetris) {
+    this.arena.deserialize(data.arena);
+    this.player.deserialize(data.player);
+
+    this.updateScore(data.player.score);
+    this.draw();
   }
 
   draw() {
@@ -37,8 +62,6 @@ export class Tetris {
   }
 
   start() {
-    this.ctx.scale(20, 20);
-
     const self = this;
     function update(deltaTime: number) {
       self.player.update(deltaTime);

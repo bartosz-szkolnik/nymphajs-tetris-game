@@ -1,11 +1,25 @@
-import { Matrix } from '@nymphajs/core';
-import { Player } from './player';
+import { EventEmitter, Matrix } from '@nymphajs/core';
+import type { Player } from './player';
+import { ArenaEvent, MATRIX_CHANGED } from './events';
+import { Serializable } from '@nymphajs/network';
+import { SerializedArena } from '../shared-types';
 
 const ARENA_WIDTH = 12;
 const ARENA_HEIGHT = 20;
 
-export class Arena {
+export class Arena implements Serializable<SerializedArena> {
   readonly matrix = this.createMatrix(ARENA_WIDTH, ARENA_HEIGHT);
+  readonly events = new EventEmitter<ArenaEvent>();
+
+  serialize() {
+    return {
+      matrix: this.matrix.grid,
+    };
+  }
+
+  deserialize(data: SerializedArena) {
+    this.matrix.grid = data.matrix;
+  }
 
   sweep() {
     let rowCount = 1;
@@ -25,6 +39,7 @@ export class Arena {
       rowCount *= 2;
     }
 
+    this.events.emit(MATRIX_CHANGED, this.matrix.grid);
     return score;
   }
 
@@ -34,10 +49,13 @@ export class Arena {
         this.matrix.set(y + player.pos.y, x + player.pos.x, value);
       }
     });
+
+    this.events.emit(MATRIX_CHANGED, this.matrix.grid);
   }
 
   clear() {
     this.matrix.grid.forEach((row) => row.fill(0));
+    this.events.emit(MATRIX_CHANGED, this.matrix.grid);
   }
 
   collide(player: Player) {

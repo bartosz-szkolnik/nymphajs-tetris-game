@@ -13,7 +13,7 @@ const KEY_S = 'KeyS';
 const KEY_O = 'KeyO';
 const KEY_P = 'KeyP';
 
-export function setupKeyboard(player: Player) {
+function setupKeyboard(player: Player) {
   const input = new KeyboardState(false);
 
   input.addMapping(KEY_D, (keyState) => {
@@ -47,7 +47,7 @@ export function setupKeyboard(player: Player) {
   return input;
 }
 
-export function setupSecondKeyboard(player: Player) {
+function setupSecondKeyboard(player: Player) {
   const input = new KeyboardState(false);
 
   input.addMapping(ARROW_RIGHT, (keyState) => {
@@ -86,4 +86,12 @@ export function setupSecondKeyboard(player: Player) {
   });
 
   return input;
+}
+
+export function setupKeyboardFor(player: Player, isSecond: boolean) {
+  if (!isSecond) {
+    return setupKeyboard(player);
+  }
+
+  return setupSecondKeyboard(player);
 }
